@@ -13,7 +13,7 @@ setuptools.setup(
     description="MOMOALPRService package",
     long_description="MOMOALPRService Looooong description",
     long_description_content_type="text/markdown",
-    url="https://github.com/arvindixonos/MOMOService.git",
+    url="https://github.com/arvindixonos/MOMOALPRService.git",
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
