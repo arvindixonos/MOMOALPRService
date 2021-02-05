@@ -1,5 +1,17 @@
+import base64
+
 from momoservice import momoservice
 from multiprocessing import Process, Queue
+import os
+import sys
+from io import StringIO, BytesIO
+
+from momoalprservice.ultimatealprsdk import ultimateAlprSdk
+
+filepath = os.path.dirname(__file__)
+sys.path.append("{}\\{}".format(filepath, "ultimatealprsdk"))
+sys.path.append("{}\\{}".format(filepath, "ultimatealprsdkbinaries\\x86_64"))
+
 import _ultimateAlprSdk
 import argparse
 import json
@@ -55,15 +67,16 @@ class alprservice(momoservice.momoservice):
             print(TAG + operation + ": OK -> " + result.json())
         pass
 
-    def runservice(self, args):
-        image = Image.frombytes(args['target_image'])
+    def runservice(self, image):
+        # Decode the image
+        image = Image.open('indiancar.jpg')
         width, height = image.size
         if image.mode == "RGB":
-            format = _ultimateAlprSdk.ULTALPR_SDK_IMAGE_TYPE_RGB24
+            format = ultimateAlprSdk.ULTALPR_SDK_IMAGE_TYPE_RGB24
         elif image.mode == "RGBA":
-            format = _ultimateAlprSdk.ULTALPR_SDK_IMAGE_TYPE_RGBA32
+            format = ultimateAlprSdk.ULTALPR_SDK_IMAGE_TYPE_RGBA32
         elif image.mode == "L":
-            format = _ultimateAlprSdk.ULTALPR_SDK_IMAGE_TYPE_Y
+            format = ultimateAlprSdk.ULTALPR_SDK_IMAGE_TYPE_Y
         else:
             print(TAG + "Invalid mode: %s" % image.mode)
             assert False
@@ -73,30 +86,42 @@ class alprservice(momoservice.momoservice):
         exifOrientation = exif[ORIENTATION_TAG[0]] if len(ORIENTATION_TAG) == 1 and exif != None else 1
 
         # Update JSON options using values from the command args
-        JSON_CONFIG["assets_folder"] = "assets"
+        JSON_CONFIG["assets_folder"] = "assets/"
         JSON_CONFIG["charset"] = "latin"
-        JSON_CONFIG["openvino_enabled"] = True
-        JSON_CONFIG["openvino_device"] = "GPU"
 
         # Initialize the engine
-        self.checkResult("Init", _ultimateAlprSdk.UltAlprSdkEngine_init(json.dumps(JSON_CONFIG)))
+        self.checkResult("Init", ultimateAlprSdk.UltAlprSdkEngine_init(json.dumps(JSON_CONFIG)))
 
-        result = _ultimateAlprSdk.UltAlprSdkEngine_process(
+        result = ultimateAlprSdk.UltAlprSdkEngine_process(
             format,
             image.tobytes(),  # type(x) == bytes
             width,
             height,
             0,  # stride
-            exifOrientation).json()
+            exifOrientation)
 
-        jsoned = json.loads(result)
+        jsoned = json.loads(result.json())
+
+        retdict = {}
 
         if len(jsoned['plates']) > 0:
             print("Number is: {}".format(jsoned['plates'][0]['text']))
+            retdict['licence_number'] = jsoned['plates'][0]['text']
         else:
             print("NUMBER NOT FOUND")
-        pass
 
-    def startservice(self, queue):
-        super().startservice(queue)
+        return json.dumps(retdict)
+
+
+    def startservice(self, inputqueue, outputqueue):
+        super().startservice(inputqueue, outputqueue)
+
+        imagestring = inputqueue.get()
+
+        img = Image.open(BytesIO(base64.b64decode(imagestring)))
+
+        resultJSON = self.runservice(img)
+
+        outputqueue.put(resultJSON)
+
         pass

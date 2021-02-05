@@ -1,10 +1,6 @@
 import setuptools
 import sys
 
-sys.path.append('../ultimatealprsdk')
-sys.path.append('../ultimatealprsdkbinaries')
-
-
 setuptools.setup(
     name="momoalprservice", # Replace with your own username
     version="0.0.1",
