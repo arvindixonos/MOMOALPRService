@@ -1,5 +1,4 @@
 import setuptools
-import sys
 
 setuptools.setup(
     name="momoalprservice", # Replace with your own username
