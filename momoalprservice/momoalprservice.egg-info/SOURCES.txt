@@ -1,9 +1,0 @@
-pyproject.toml
-setup.py
-momoalprservice.egg-info/PKG-INFO
-momoalprservice.egg-info/SOURCES.txt
-momoalprservice.egg-info/dependency_links.txt
-momoalprservice.egg-info/top_level.txt
-ultimatealprsdk/__init__.py
-ultimatealprsdk/setup.py
-ultimatealprsdk/ultimateAlprSdk.py
